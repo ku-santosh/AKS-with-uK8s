@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: react-ui-ingress
+spec:
+  rules:
+  - host: PLACEHOLDER_HOST
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: react-ui-service
+            port:
+              number: 80

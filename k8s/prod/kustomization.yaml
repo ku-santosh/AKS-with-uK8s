@@ -1,0 +1,14 @@
+namespace: at41457-prod-recsdiui-prod
+resources:
+  - ../base
+images:
+  - name: myregistry.azurecr.io/react-ui
+    newTag: prod-latest
+patches:
+  - target:
+      kind: Ingress
+      name: react-ui-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: reactui.mycompany.com

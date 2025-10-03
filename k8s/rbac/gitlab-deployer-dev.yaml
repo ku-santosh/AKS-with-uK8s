@@ -1,0 +1,30 @@
+# OPTIONAL: Scoped RBAC for GitLab deployer in Dev
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gitlab-deployer
+  namespace: at41457-dev-recsdiui-dev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitlab-deployer-role
+  namespace: at41457-dev-recsdiui-dev
+rules:
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["pods", "services", "deployments", "ingresses", "configmaps", "secrets"]
+  verbs: ["get", "list", "create", "update", "delete", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-deployer-binding
+  namespace: at41457-dev-recsdiui-dev
+subjects:
+- kind: ServiceAccount
+  name: gitlab-deployer
+  namespace: at41457-dev-recsdiui-dev
+roleRef:
+  kind: Role
+  name: gitlab-deployer-role
+  apiGroup: rbac.authorization.k8s.io

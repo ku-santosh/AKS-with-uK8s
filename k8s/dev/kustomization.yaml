@@ -1,0 +1,14 @@
+namespace: at41457-dev-recsdiui-dev
+resources:
+  - ../base
+images:
+  - name: myregistry.azurecr.io/react-ui
+    newTag: dev-latest
+patches:
+  - target:
+      kind: Ingress
+      name: react-ui-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: reactui-dev.mycompany.com

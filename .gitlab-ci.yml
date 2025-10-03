@@ -1,0 +1,76 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  REGISTRY: myregistry.azurecr.io
+  IMAGE_NAME: react-ui
+
+before_script:
+  # 🔸 NOTE: For MVP we use cluster-admin token directly.
+  # Later you can enable scoped ServiceAccounts (RBAC) and GitLab secrets.
+  - echo "Logging in to Azure Container Registry"
+  - echo $AZURE_ACR_PASSWORD | docker login $REGISTRY -u $AZURE_ACR_USERNAME --password-stdin
+
+build:
+  stage: build
+  script:
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
+        TAG=dev-latest
+        ENV=development
+      elif [[ "$CI_COMMIT_BRANCH" == "uat" ]]; then
+        TAG=uat-latest
+        ENV=uat
+      else
+        TAG=prod-latest
+        ENV=production
+      fi
+    - docker build --build-arg ENV=$ENV -t $REGISTRY/$IMAGE_NAME:$TAG .
+    - docker push $REGISTRY/$IMAGE_NAME:$TAG
+  except:
+    - tags
+
+deploy_dev:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying to Dev..."
+    - kubectl config set-cluster aks --server=$KUBE_SERVER --certificate-authority=$KUBE_CA --embed-certs=true
+    - kubectl config set-credentials gitlab --token=$KUBE_TOKEN   # 🔸 Optional: replace with RBAC token later
+    - kubectl config set-context aks --cluster=aks --user=gitlab --namespace=at41457-dev-recsdiui-dev
+    - kubectl config use-context aks
+    - cd k8s/dev
+    - kubectl apply -k .
+  only:
+    - dev
+
+deploy_uat:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying to UAT..."
+    - kubectl config set-cluster aks --server=$KUBE_SERVER --certificate-authority=$KUBE_CA --embed-certs=true
+    - kubectl config set-credentials gitlab --token=$KUBE_TOKEN   # 🔸 Optional: replace with RBAC token later
+    - kubectl config set-context aks --cluster=aks --user=gitlab --namespace=at41457-uat-recsdiui-uat
+    - kubectl config use-context aks
+    - cd k8s/uat
+    - kubectl apply -k .
+  only:
+    - uat
+
+deploy_prod:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying to Prod..."
+    - kubectl config set-cluster aks --server=$KUBE_SERVER --certificate-authority=$KUBE_CA --embed-certs=true
+    - kubectl config set-credentials gitlab --token=$KUBE_TOKEN   # 🔸 Optional: replace with RBAC token later
+    - kubectl config set-context aks --cluster=aks --user=gitlab --namespace=at41457-prod-recsdiui-prod
+    - kubectl config use-context aks
+    - cd k8s/prod
+    - kubectl apply -k .
+  only:
+    - main
+  when: manual
+  allow_failure: false

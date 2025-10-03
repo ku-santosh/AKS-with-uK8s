@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: at41457-uat-recsdiui-uat
+  labels:
+    env: uat
+    app: react-ui

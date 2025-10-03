@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: at41457-dev-recsdiui-dev
+  labels:
+    env: dev
+    app: react-ui
